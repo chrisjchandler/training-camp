@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"os"
+	"sort"
 	"training-camp/internal/openai"
 )
 
@@ -13,6 +14,7 @@ type Model struct {
 	Labels   []string
 }
 
+// Euclidean distance between two vectors
 func euclidean(a, b []float64) float64 {
 	sum := 0.0
 	for i := range a {
@@ -22,6 +24,7 @@ func euclidean(a, b []float64) float64 {
 	return math.Sqrt(sum)
 }
 
+// TrainClassifier stores features and labels for a simple 1-NN classifier
 func TrainClassifier(data []openai.EmbeddedSample) (*Model, error) {
 	if len(data) == 0 {
 		return nil, errors.New("no data to train on")
@@ -37,6 +40,7 @@ func TrainClassifier(data []openai.EmbeddedSample) (*Model, error) {
 		features = append(features, vec)
 		labels = append(labels, d.Label)
 	}
+
 	return &Model{Features: features, Labels: labels}, nil
 }
 
@@ -61,6 +65,7 @@ func LoadModel(path string) (*Model, error) {
 	return &model, err
 }
 
+// Predict returns the label of the single nearest neighbor
 func (m *Model) Predict(vec []float64) string {
 	bestIdx := 0
 	minDist := euclidean(m.Features[0], vec)
@@ -71,4 +76,28 @@ func (m *Model) Predict(vec []float64) string {
 		}
 	}
 	return m.Labels[bestIdx]
+}
+
+// Neighbor holds a neighbor result for Top-K queries
+type Neighbor struct {
+	Label    string  `json:"label"`
+	Distance float64 `json:"distance"`
+	Index    int     `json:"index"`
+}
+
+// TopK returns the K nearest labeled neighbors
+func (m *Model) TopK(vec []float64, k int) []Neighbor {
+	if k <= 0 {
+		k = 1
+	}
+	if k > len(m.Features) {
+		k = len(m.Features)
+	}
+	neigh := make([]Neighbor, 0, len(m.Features))
+	for i := range m.Features {
+		d := euclidean(m.Features[i], vec)
+		neigh = append(neigh, Neighbor{Label: m.Labels[i], Distance: d, Index: i})
+	}
+	sort.Slice(neigh, func(i, j int) bool { return neigh[i].Distance < neigh[j].Distance })
+	return neigh[:k]
 }
