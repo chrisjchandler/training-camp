@@ -1,0 +1,42 @@
+[
+  {
+    "text": "1. `I love you`",
+    "label": "`Te amo`"
+  },
+  {
+    "text": "2. `Hello`",
+    "label": "`Salve`"
+  },
+  {
+    "text": "3. `Goodbye`",
+    "label": "`Vale`"
+  },
+  {
+    "text": "4. `Please`",
+    "label": "`Sodes`"
+  },
+  {
+    "text": "5. `Thank you`",
+    "label": "`Gratias tibi`"
+  },
+  {
+    "text": "6. `Yes`",
+    "label": "`Ita`"
+  },
+  {
+    "text": "7. `No`",
+    "label": "`Minime`"
+  },
+  {
+    "text": "8. `I don't understand`",
+    "label": "`Non intellego`"
+  },
+  {
+    "text": "9. `Where is the library?`",
+    "label": "`Ubi est bibliotheca?`"
+  },
+  {
+    "text": "10. `Bathroom`",
+    "label": "`Balneum`"
+  }
+]

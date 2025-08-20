@@ -1,140 +1,136 @@
-# Training Camp
+kTraining Camp
 
-A Go-based CLI to generate, embed, train, serve, and evaluate narrow AI models using OpenAI embeddings and a custom KNN-style logic — no Python required.
+A Go-based CLI to generate, embed, train, serve, and evaluate narrow AI models using OpenAI embeddings and KNN-style logic — no Python required.
 
----
+Features
 
-## Features
+Prompt-based training data generation via OpenAI
 
--  Prompt-based training data generation via OpenAI
--  Embedding via OpenAI's `text-embedding-ada-002`
--  Custom KNN (1-NN) classifier in pure Go (serializable)
--  Accuracy evaluation tools
--  Offline prediction API with `training-camp serve`
--  Batch prediction endpoint with multi-label support
--  Detailed logging for prediction events
--  Task-based config YAMLs for reusable pipelines
+Embedding via OpenAI's text-embedding-ada-002
 
----
+Custom 1-NN classifier in pure Go (serializable)
 
-## Install
+Accuracy evaluation tools
 
-```bash
+Offline prediction API with training-camp serve
+
+Task-based config YAMLs for reusable pipelines
+
+Install
+
 git clone https://github.com/your-org/training-camp.git
 cd training-camp
 go build -o training-camp
-```
 
----
 
-## Quickstart 
+Export your OpenAI API key:
+export OPENAI_API_KEY=sk-xxxxx
 
-```bash
-# 1. Generate training examples
-training-camp generate --task "Classify watch descriptions as real or fake" --count 100 > watch.json
+(You can also put it in a .env file.)
 
-# 2. Embed them via OpenAI
-training-camp embed -i watch.json -o watch.embeddings.json
+Quickstart (Latin Translation Example)
+1. Generate training examples
+./training-camp generate --task "translate english text to latin" --count 10 -o latin.json
 
-# 3. Train a classifier
-training-camp train -i watch.embeddings.json -o watch.model.gob
+latin.json will contain labeled training pairs.
 
-# 4. Evaluate on test data
-training-camp eval -m watch.model.gob -i test.embeddings.json
+2. Create embeddings
+./training-camp embed -i latin.json -o latin.embeddings.json
 
-# 5. Serve predictions
-training-camp serve -m watch.model.gob -p 8080
-```
 
----
+3. Train a classifier
+./training-camp train -i latin.embeddings.json -o latin.model.gob
 
-## Serving API
+3. Train a classifier
 
-### Single Prediction
-```bash
+4. Evaluate on test data
+
+If you have a latin_test.embeddings.json file:
+
+./training-camp eval -m latin.model.gob -i latin_test.embeddings.json
+
+Serve Predictions
+./training-camp serve -m latin.model.gob -p 8080
+
+Serving API
+Single Prediction
+
+Send one embedding vector:
+
 curl -X POST http://localhost:8080/predict \
   -H "Content-Type: application/json" \
-  -d '{"embedding": [0.12, 0.47, ...]}'
-```
-Returns:
-```json
-{"label": "real"}
-```
+  -d '{
+    "embedding": [0.12, 0.34, 0.56, 0.78]
+  }'
 
-### Batch Prediction
-```bash
+{"label":"latin"}
+
+Batch Prediction
+
+Send multiple embeddings at once:
+
 curl -X POST http://localhost:8080/predict/batch \
   -H "Content-Type: application/json" \
-  -d '{"embeddings": [[0.12, 0.47, ...], [0.21, 0.19, ...]]}'
-```
-Returns:
-```json
-{"labels": ["real", "fake"]}
-```
+  -d '{
+    "embeddings": [
+      [0.12, 0.34, 0.56, 0.78],
+      [0.98, 0.76, 0.54, 0.32]
+    ]
+  }'
 
-### Logging
-- Each request and prediction is logged to stdout.
-- Batch requests log the number of predictions processed.
-- Invalid requests are logged with error details.
+Response:
+{
+  "labels": ["latin", "latin"]
+}
 
->  CORS headers enabled for browser compatibility.
->  Logs provide traceability for debugging and auditing.
+Browser Example (CORS Enabled)
 
----
 
-## Hugging Face Notes
+fetch("http://localhost:8080/predict", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ embedding: [0.12, 0.34, 0.56, 0.78] })
+})
+.then(res => res.json())
+.then(console.log)
+
+
+Hugging Face Notes
 
 You do NOT need Hugging Face unless you want to:
-- Fine-tune a transformer model (Python + PyTorch)
-- Use pre-trained HF models for embeddings
-- Export or host on the Hugging Face Hub
+
+Fine-tune a transformer model (Python + PyTorch)
+
+Use pre-trained HF models for embeddings
+
+Export or host on the Hugging Face Hub
 
 If needed:
-```bash
+
 pip install sentence-transformers
 python -m onnxruntime_tools.convert --model_path ./model --output_path ./model.onnx
-```
-Then use `onnx-go` for inference.
 
----
 
-## Project Layout
+Then use onnx-go for inference.
 
-```
-training-camp/
-├── main.go              # CLI entry
-├── cmd/                 # Cobra commands
-├── internal/            # OpenAI + ML logic
-├── config/              # Task configs (YAML)
-├── models/              # Trained models
-├── templates/           # Prompt templates (optional)
-├── output/              # Generated data & embeddings
-└── README.md
-```
+Roadmap
 
----
+ OpenAI generation + embedding
 
-##  Use Cases
+ Offline training & eval
 
-- Generate lightweight classifiers from labeled text
-- Deploy offline AI APIs for internal workflows
+ Serve predictions via HTTP
 
----
+ Batch prediction endpoint
 
-##  Roadmap
-- [x] OpenAI generation + embedding
-- [x] Offline training & eval
-- [x] Serve predictions via HTTP
-- [x] Batch prediction support
-- [x] Logging functions
-- [ ] Multi-label classification with top-N scoring
-- [ ] Export predictions in batch to file (CSV/JSON)
-- [ ] Config-driven fine-tuning presets
-- [ ] Add `/healthz` and `/version` endpoints
+ CORS support
 
----
+ Multi-label classification
 
-Note: requires an OPENAI API key to perform training functions
+ Export predictions in batch
 
-##  License
+ Config-based fine-tuning presets
+
+License
+
 MIT
