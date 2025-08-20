@@ -115,15 +115,15 @@ Then use onnx-go for inference.
 
 Roadmap
 
- OpenAI generation + embedding
+X OpenAI generation + embedding
 
- Offline training & eval
+X Offline training & eval
 
- Serve predictions via HTTP
+X Serve predictions via HTTP
 
- Batch prediction endpoint
+X Batch prediction endpoint
 
- CORS support
+X CORS support
 
  Multi-label classification
 
