@@ -19,7 +19,7 @@ Minimal frontend UI served at /
 Configurable background scheduler for "continuing education" (periodic retraining with new samples)
 
 Install
-git clone https://github.com/your-org/training-camp.git
+
 cd training-camp
 go build -o training-camp
 
