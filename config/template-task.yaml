@@ -1,0 +1,35 @@
+# Task identifier (used in filenames and outputs)
+task: "template-task"
+
+# Mode: classification | summarization
+mode: "classification"
+
+# Human-readable description of what the task should do
+description: "Classify input text into categories based on examples."
+
+# Labels (for classification tasks)
+labels:
+  - label1
+  - label2
+  - label3
+
+# Output directory for artifacts (models, logs, data)
+output_dir: "output/template-task"
+
+# OpenAI settings
+openai:
+  model: "gpt-4"
+  embedding_model: "text-embedding-ada-002"
+  temperature: 0.7
+  max_samples: 100
+
+# Training settings
+training:
+  model_type: "knn"
+  k: 1   # nearest neighbors to consider (currently fixed to 1-NN)
+  save_path: "models/template-task.model.gob"
+
+# Evaluation settings
+evaluation:
+  test_file: "output/template-task/test.embeddings.json"
+  metrics: ["accuracy"]
