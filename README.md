@@ -1,117 +1,150 @@
-kTraining Camp
+# Training Camp
 
 A Go-based CLI to generate, embed, train, serve, and evaluate narrow AI models using OpenAI embeddings and KNN-style logic — no Python required.
 
-Features
+---
 
-Prompt-based training data generation via OpenAI
+## Features
 
-Embedding via OpenAI's text-embedding-ada-002
+- Prompt-based training data generation via OpenAI
+- Embedding via OpenAI's `text-embedding-ada-002`
+- Custom 1-NN classifier in pure Go (serializable)
+- Accuracy evaluation tools
+- Offline prediction API with `training-camp serve`
+- Batch prediction endpoint
+- Multi-label / top-K neighbor support
+- Minimal browser-based UI served at `/`
+- Task-based config YAMLs for reusable pipelines
 
-Custom 1-NN classifier in pure Go (serializable)
+---
 
-Accuracy evaluation tools
+## Install
 
-Offline prediction API with training-camp serve
-
-Task-based config YAMLs for reusable pipelines
-
-Install
-
+```bash
 git clone https://github.com/your-org/training-camp.git
 cd training-camp
 go build -o training-camp
 
-
-Export your OpenAI API key:
-export OPENAI_API_KEY=sk-xxxxx
-
-(You can also put it in a .env file.)
-
 Quickstart (Latin Translation Example)
-1. Generate training examples
-./training-camp generate --task "translate english text to latin" --count 10 -o latin.json
+# 1. Generate training examples
+./training-camp generate --task "translate english text to latin" --count 20 --output latin.json
 
-latin.json will contain labeled training pairs.
-
-2. Create embeddings
+# 2. Embed them via OpenAI
 ./training-camp embed -i latin.json -o latin.embeddings.json
 
-
-3. Train a classifier
+# 3. Train a classifier
 ./training-camp train -i latin.embeddings.json -o latin.model.gob
 
-3. Train a classifier
+# 4. Evaluate on test data
+./training-camp eval -m latin.model.gob -i test.embeddings.json
 
-4. Evaluate on test data
-
-If you have a latin_test.embeddings.json file:
-
-./training-camp eval -m latin.model.gob -i latin_test.embeddings.json
-
-Serve Predictions
+# 5. Serve predictions (HTTP API + UI)
 ./training-camp serve -m latin.model.gob -p 8080
 
+
 Serving API
-Single Prediction
 
-Send one embedding vector:
+Once training-camp serve is running:
 
+Health check
+curl http://localhost:8080/healthz
+
+Classify raw embedding
 curl -X POST http://localhost:8080/predict \
   -H "Content-Type: application/json" \
-  -d '{
-    "embedding": [0.12, 0.34, 0.56, 0.78]
-  }'
+  -d '{"embedding": [0.12, 0.47, ...]}'
 
-{"label":"latin"}
-
-Batch Prediction
-
-Send multiple embeddings at once:
-
-curl -X POST http://localhost:8080/predict/batch \
-  -H "Content-Type: application/json" \
-  -d '{
-    "embeddings": [
-      [0.12, 0.34, 0.56, 0.78],
-      [0.98, 0.76, 0.54, 0.32]
-    ]
-  }'
 
 Response:
+{"label": "salve mundi"}
+
+Batch classification
+curl -X POST http://localhost:8080/predict/batch \
+  -H "Content-Type: application/json" \
+  -d '{"embeddings": [[0.1,0.2,...], [0.3,0.4,...]]}'
+{"label": "salve mundi"}
+
+
+Response:
+{"labels": ["salve mundi", "te amo"]}
+
+Text classification (server embeds via OpenAI)
+curl -X POST http://localhost:8080/classify_text \
+  -H "Content-Type: application/json" \
+  -d '{"text": "How do I say hello in Latin?"}'
+
+Response 
+{"label": "salve"}
+
+Top-K neighbors
+
+curl -X POST "http://localhost:8080/classify_text_topk?k=3" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "good night"}'
+
+
+Response: 
 {
-  "labels": ["latin", "latin"]
+  "text": "good night",
+  "neighbors": [
+    {"label": "nox bona", "distance": 0.11},
+    {"label": "salve mundi", "distance": 0.37},
+    {"label": "te amo", "distance": 0.44}
+  ],
+  "k": 3,
+  "note": "Top-K nearest labeled examples. Increase k for more alternatives."
 }
 
-Browser Example (CORS Enabled)
+
+Minimal Frontend
+
+When running serve, open http://localhost:8080
+ in your browser.
+A simple UI is included where you can type text, click Classify, and see JSON results.
+
+Environment
+
+Set your OpenAI API key before running:
+
+export OPENAI_API_KEY=sk-xxxxx
+
+Optionally create a .env file:
+
+OPENAI_API_KEY=sk-xxxxx
+
+Template Task Config (YAML)
+
+task: "translate english text to latin"
+count: 50
+output: latin.json
 
 
-fetch("http://localhost:8080/predict", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ embedding: [0.12, 0.34, 0.56, 0.78] })
-})
-.then(res => res.json())
-.then(console.log)
+Run With
+./training-camp generate --config task.yaml
+
+Project Layout
+
+training-camp/
+├── cmd/          # CLI commands (generate, embed, train, eval, serve)
+├── internal/     # internal packages
+│   ├── ml        # model + KNN logic
+│   └── openai    # embedding + API helpers
+├── go.mod
+├── go.sum
+└── README.md
 
 
-Hugging Face Notes
+Use Cases
 
-You do NOT need Hugging Face unless you want to:
+Translate or classify text into narrow domains
 
-Fine-tune a transformer model (Python + PyTorch)
+Watch authenticity checks
 
-Use pre-trained HF models for embeddings
+Incident triage
 
-Export or host on the Hugging Face Hub
+Ticket classification
 
-If needed:
-
-pip install sentence-transformers
-python -m onnxruntime_tools.convert --model_path ./model --output_path ./model.onnx
-
-
-Then use onnx-go for inference.
+Any small supervised task with text
 
 Roadmap
 
@@ -123,13 +156,14 @@ X Serve predictions via HTTP
 
 X Batch prediction endpoint
 
-X CORS support
+X Top-K neighbor inspection
 
  Multi-label classification
 
  Export predictions in batch
 
  Config-based fine-tuning presets
+
 
 License
 
