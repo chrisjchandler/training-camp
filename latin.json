@@ -1,1 +1,18 @@
-null
+[
+  {
+    "text": "'This is a book about history.'",
+    "label": "'History'"
+  },
+  {
+    "text": "'I love cooking Italian food.'",
+    "label": "'Cooking'"
+  },
+  {
+    "text": "'This is a book about history.'",
+    "label": "'Hoc est liber de historia.'"
+  },
+  {
+    "text": "'I love cooking Italian food.'",
+    "label": "'Amo coquere cibum italicum.'"
+  }
+]
